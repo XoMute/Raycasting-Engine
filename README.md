@@ -7,5 +7,4 @@ After that I will try to create some kind of FPS shooter on base of this engine(
 ## Current progress
 Implemented raycasting\
 Demo:
-<video width="320" height="240" controls>
-  <source src="raycasting.mp4" type="video/mp4">
+![](raycasting.gif)
