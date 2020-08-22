@@ -2,16 +2,19 @@ package com.xomute
 
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Input
-import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import ktx.app.KtxApplicationAdapter
 import ktx.app.clearScreen
+import kotlin.math.PI
 
 val WIDTH = 1024
 val HEIGHT = 512
+val PI2 = PI / 2
+val PI32 = 3 * PI / 2
+val DR = 0.0174533f // 1 degree in radians
 
-class Raycasting : KtxApplicationAdapter {
+class Game : KtxApplicationAdapter {
 
     private lateinit var renderer: ShapeRenderer
     private lateinit var camera: OrthographicCamera
@@ -23,7 +26,7 @@ class Raycasting : KtxApplicationAdapter {
         camera = OrthographicCamera(Gdx.graphics.width.toFloat(), Gdx.graphics.height.toFloat()).also {
             it.setToOrtho(true, Gdx.graphics.width.toFloat(), Gdx.graphics.height.toFloat())
         }
-        map = GameMap()
+        map = GameMap
         player = Player()
     }
 
@@ -44,10 +47,15 @@ class Raycasting : KtxApplicationAdapter {
             player.move(Direction.RIGHT, map)
         }
         if (Gdx.input.isKeyPressed(Input.Keys.W)) {
-            player.move(Direction.UP, map)
-        } else
-        if (Gdx.input.isKeyPressed(Input.Keys.S)) {
-            player.move(Direction.DOWN, map)
+            player.move(Direction.FORWARD, map)
+        } else if (Gdx.input.isKeyPressed(Input.Keys.S)) {
+            player.move(Direction.BACKWARD, map)
+        }
+
+        if (Gdx.input.isKeyPressed(Input.Keys.Q)) {
+            player.rotate(Direction.LEFT)
+        } else if (Gdx.input.isKeyPressed(Input.Keys.E)) {
+            player.rotate(Direction.RIGHT)
         }
 
         if (Gdx.input.isKeyPressed(Input.Keys.ESCAPE)) {
@@ -59,7 +67,6 @@ class Raycasting : KtxApplicationAdapter {
     private fun draw() {
         clearScreen(0f, 0f, 0f)
         renderer.projectionMatrix = camera.combined
-        renderer.color = Color.WHITE
         map.draw(renderer)
         player.draw(renderer)
     }

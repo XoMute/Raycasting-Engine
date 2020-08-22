@@ -5,7 +5,7 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import ktx.graphics.color
 import ktx.graphics.use
 
-class GameMap {
+object GameMap {
 
     val x = 8
     val y = 8
@@ -26,7 +26,7 @@ class GameMap {
 
     operator fun get(i: Int): Int = map[i]
 
-    operator fun get(x: Int, y: Int): Int = map[x + y * this.y]
+    operator fun get(x: Int, y: Int): Int = map[x + y * this.x]
 
     fun draw(renderer: ShapeRenderer) {
         renderer.use(ShapeRenderer.ShapeType.Filled) {
