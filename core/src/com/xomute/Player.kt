@@ -1,8 +1,8 @@
 package com.xomute
 
+import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
-import com.xomute.rays.Rays
 import ktx.graphics.use
 import kotlin.math.PI
 import kotlin.math.cos
@@ -14,9 +14,9 @@ enum class Direction {
 
 class Player {
 
-    private val rays = Rays(60)
+    private val rays = Raycaster(60)
 
-    private val speed = 5
+    private val speed = 3
     private val width = 10
     private val height = 10
 
@@ -34,9 +34,10 @@ class Player {
         get() = y.toFloat() + height / 2
 
     fun draw(renderer: ShapeRenderer) {
+        rays.draw2D(renderer, centerX, centerY, angle.toFloat())
         renderer.use(ShapeRenderer.ShapeType.Line) {
-            rays.draw2D(renderer, centerX, centerY, angle.toFloat())
             renderer.color = Color.YELLOW
+            Gdx.gl.glLineWidth(1f)
             renderer.rect(x.toFloat(), y.toFloat(), width.toFloat(), height.toFloat())
             renderer.line(centerX, centerY, centerX + dx * speed, centerY + dy * speed)
         }
@@ -45,15 +46,13 @@ class Player {
     fun move(dir: Direction, map: GameMap, speed: Int = this.speed) {
         if (speed == 0) return
 
-        // todo: that's fucking a lot of checks - try to reduce
+        // todo: implement collision detection
         when (dir) {
-//            Direction.LEFT -> if (map.check(x - speed, y) && map.check(x - speed, y + height)) x -= speed else move(dir, map, speed - 1)
-//            Direction.RIGHT -> if (map.check(x + speed + width, y) && map.check(x + speed + width, y + height)) x += speed else move(dir, map, speed - 1)
-            Direction.FORWARD -> /*if (map.check(x + dx.toInt()*//* + width*//*, y + dx.toInt()*//* + height*//*) *//*&& map.check(x + width + dx.toInt(), y + speed + height)*//*)*/ {
+            Direction.FORWARD -> {
                 x += dx.toInt()
                 y += dy.toInt()
             }
-            Direction.BACKWARD -> /*if (map.check(x - dx.toInt(), y - dy.toInt())*//* && map.check(x + width - dx.toInt(), y + height - dy.toInt())*//*)*/ {
+            Direction.BACKWARD -> {
                 x -= dx.toInt()
                 y -= dy.toInt()
             }

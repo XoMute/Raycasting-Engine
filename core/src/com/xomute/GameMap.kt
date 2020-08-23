@@ -7,20 +7,21 @@ import ktx.graphics.use
 
 object GameMap {
 
-    val x = 8
-    val y = 8
-    val size = 64f
+    const val x = 8
+    const val y = 8
+    const val size = 64f
 
-    val WALL = 1
+    const val WALL = 1
+    const val WALL2 = 2
 
-    val map = intArrayOf(
+    private val map = intArrayOf(
             1, 1, 1, 1, 1, 1, 1, 1,
-            1, 0, 1, 0, 0, 0, 0, 1,
-            1, 0, 0, 0, 0, 0, 0, 1,
-            1, 0, 0, 0, 1, 0, 0, 1,
-            1, 0, 0, 0, 0, 0, 0, 1,
             1, 0, 0, 1, 0, 0, 0, 1,
-            1, 0, 0, 1, 0, 0, 0, 1,
+            1, 0, 1, 1, 0, 0, 0, 1,
+            1, 0, 1, 0, 0, 2, 0, 1,
+            1, 0, 1, 0, 2, 2, 2, 1,
+            1, 0, 0, 0, 0, 0, 2, 1,
+            1, 0, 0, 0, 0, 2, 2, 1,
             1, 1, 1, 1, 1, 1, 1, 1
     )
 
@@ -33,12 +34,12 @@ object GameMap {
             for (x in 0 until x) {
                 for (y in 0 until y) {
                     val tile = this[x, y]
-                    renderer.color = if (tile == WALL) Color.WHITE else color(.1f, .1f, .1f)
+                    renderer.color = if (tile == WALL) Color.WHITE else if (tile == WALL2) Color.RED else color(.1f, .1f, .1f)
                     renderer.rect(x * size, y * size, size - 1, size - 1)
                 }
             }
         }
     }
 
-    fun check(x: Int, y: Int): Boolean = this[x / size.toInt(), y / size.toInt()] == 0
+    fun check(x: Int, y: Int): Boolean = this[x / size.toInt(), y / size.toInt()] >= 0
 }

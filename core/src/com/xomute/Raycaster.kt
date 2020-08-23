@@ -1,14 +1,14 @@
-package com.xomute.rays
+package com.xomute
 
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.math.Vector2
-import com.xomute.*
+import ktx.graphics.color
 import ktx.graphics.use
 import kotlin.math.*
 
-class Rays(val count: Int) {
+class Raycaster(val count: Int) {
 
     fun draw2D(renderer: ShapeRenderer, px: Float, py: Float, pa: Float) {
         var xo = 0f
@@ -22,11 +22,12 @@ class Rays(val count: Int) {
         var ra = pa - DR * (count / 2)
         if (ra < 0) ra += 2 * PI.toFloat()
         if (ra > 2 * PI) ra -= 2 * PI.toFloat()
-        renderer.color = Color.GREEN
 
-        for (r in 0 until count) {
+        for (r in 0 until count * 2) {
             val vRay = Vector2(1000f, 1000f)
             val hRay = Vector2(1000f, 1000f)
+            var intersectedTileH = 0
+            var intersectedTileV = 0
             // check horizontal
             var dof = 0
             val aTan = -1 / tan(ra)
@@ -47,19 +48,20 @@ class Rays(val count: Int) {
             if (ra == 0f || ra == PI.toFloat()) { // looking straight left or right
                 rx = px
                 ry = py
-                dof = maxDof // todo: remove every hardcoded number
+                dof = maxDof
             }
 
 
-            while (dof < maxDof) { // todo: remove every hardcoded number
+            while (dof < maxDof) {
                 val mapX = rx.toInt() shr 6 // todo: remove every hardcoded number
                 val mapY = ry.toInt() shr 6  // todo: remove every hardcoded number
                 val index = mapX + mapY * GameMap.x
                 if (index >= 0 && index < GameMap.x * GameMap.y && GameMap[index] > 0) { // hit obstacle
                     hRay.x = rx
                     hRay.y = ry
+                    intersectedTileH = GameMap[index]
                     dof = maxDof
-                } else { // todo: remove every hardcoded number
+                } else {
                     rx += xo
                     ry += yo
                     dof++
@@ -74,15 +76,15 @@ class Rays(val count: Int) {
                 // the math behind this is simple: we want to round our y to closes 64 divisible value
                 rx = ((px.toInt() shr 6) shl 6).toFloat() - 0.0001f
                 ry = (px - rx) * nTan + py
-                xo = -64f  // todo: remove every hardcoded number
+                xo = -GameMap.size
                 yo = -xo * nTan
             }
 
             if (ra < PI2 || ra > PI32) { // looking right
                 // the math behind this is simple: we want to round our y to closes 64 divisible value
-                rx = ((px.toInt() shr 6) shl 6) + 64f  // todo: remove every hardcoded number
+                rx = ((px.toInt() shr 6) shl 6) + GameMap.size
                 ry = (px - rx) * nTan + py
-                xo = 64f  // todo: remove every hardcoded number
+                xo = GameMap.size
                 yo = -xo * nTan
             }
 
@@ -99,6 +101,7 @@ class Rays(val count: Int) {
                 if (index >= 0 && index < GameMap.x * GameMap.y && GameMap[index] != 0) { // hit obstacle
                     vRay.x = rx
                     vRay.y = ry
+                    intersectedTileV = GameMap[index]
                     dof = maxDof
                 } else {
                     rx += xo
@@ -107,9 +110,46 @@ class Rays(val count: Int) {
                 }
             }
 
-            val minRay = if (vRay.dst(pl) < hRay.dst(pl)) vRay else hRay
-            renderer.line(pl, minRay)
-            ra += DR
+            var clr: Color
+            val distH = hRay.dst(pl)
+            val distV = vRay.dst(pl)
+            var minDist: Float
+            val minRay = if (distV < distH) {
+                minDist = distV
+                clr = when (intersectedTileV) {
+                    GameMap.WALL -> color(0.9f, 0.9f, 0.9f)
+                    GameMap.WALL2 -> color(0.9f, 0f, 0f)
+                    else -> Color.BLACK
+                }
+                vRay
+            } else {
+                minDist = distH
+                clr = when (intersectedTileH) {
+                    GameMap.WALL -> color(0.7f, 0.7f, 0.7f)
+                    GameMap.WALL2 -> color(0.7f, 0f, 0f)
+                    else -> Color.BLACK
+                }
+                hRay
+            }
+            renderer.use(ShapeRenderer.ShapeType.Line) {
+                Gdx.gl.glLineWidth(1f)
+                it.color = Color.GREEN
+                renderer.line(pl, minRay)
+            }
+
+            var ca = pa - ra
+            if (ca < 0) ca += 2 * PI.toFloat()
+            if (ca > 2 * PI) ca -= 2 * PI.toFloat()
+            minDist *= cos(ca)
+            var lineH = GameMap.size * HEIGHT / minDist
+            if (lineH > HEIGHT) lineH = HEIGHT.toFloat()
+            val lineO = HEIGHT / 2 - lineH / 2
+            renderer.use(ShapeRenderer.ShapeType.Line) {
+                Gdx.gl.glLineWidth(8f)
+                it.color = clr
+                it.line(r * 4f + WIDTH / 2 + 6, lineO, r * 4f + WIDTH / 2 + 6, lineH + lineO)
+            }
+            ra += DR / 2
             if (ra < 0) ra += 2 * PI.toFloat()
             if (ra > 2 * PI.toFloat()) ra -= 2 * PI.toFloat()
         }
