@@ -41,5 +41,5 @@ object GameMap {
         }
     }
 
-    fun check(x: Int, y: Int): Boolean = this[x / size.toInt(), y / size.toInt()] >= 0
+    fun check(x: Float, y: Float): Boolean = this[(x / size).toInt(), (y / size).toInt()] == 0
 }

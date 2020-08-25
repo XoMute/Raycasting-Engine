@@ -10,6 +10,9 @@ import kotlin.math.*
 
 class Raycaster(val count: Int) {
 
+    val lineW = WIDTH / count.toFloat()
+    val smoothing = 4 // bigger the number -> smoother the walls
+
     fun draw2D(renderer: ShapeRenderer, px: Float, py: Float, pa: Float) {
         var xo = 0f
         var yo = 0f
@@ -19,11 +22,11 @@ class Raycaster(val count: Int) {
 
         val maxDof = 20
 
-        var ra = pa - DR * (count / 2)
+        var ra = pa - DR * count / 2
         if (ra < 0) ra += 2 * PI.toFloat()
         if (ra > 2 * PI) ra -= 2 * PI.toFloat()
 
-        for (r in 0 until count * 2) {
+        for (r in 0 until count * smoothing) {
             val vRay = Vector2(1000f, 1000f)
             val hRay = Vector2(1000f, 1000f)
             var intersectedTileH = 0
@@ -82,7 +85,7 @@ class Raycaster(val count: Int) {
 
             if (ra < PI2 || ra > PI32) { // looking right
                 // the math behind this is simple: we want to round our y to closes 64 divisible value
-                rx = ((px.toInt() shr 6) shl 6) + GameMap.size
+                rx = ((px.toInt() shr 6) shl 6) + GameMap.size // todo: remove every hardcoded number
                 ry = (px - rx) * nTan + py
                 xo = GameMap.size
                 yo = -xo * nTan
@@ -131,25 +134,27 @@ class Raycaster(val count: Int) {
                 }
                 hRay
             }
-            renderer.use(ShapeRenderer.ShapeType.Line) {
-                Gdx.gl.glLineWidth(1f)
-                it.color = Color.GREEN
-                renderer.line(pl, minRay)
-            }
+
+            // todo: remove in future releases
+//            renderer.use(ShapeRenderer.ShapeType.Line) {
+//                Gdx.gl.glLineWidth(1f)
+//                it.color = Color.GREEN
+//                renderer.line(pl, minRay)
+//            }
 
             var ca = pa - ra
             if (ca < 0) ca += 2 * PI.toFloat()
             if (ca > 2 * PI) ca -= 2 * PI.toFloat()
             minDist *= cos(ca)
-            var lineH = GameMap.size * HEIGHT / minDist
-            if (lineH > HEIGHT) lineH = HEIGHT.toFloat()
-            val lineO = HEIGHT / 2 - lineH / 2
-            renderer.use(ShapeRenderer.ShapeType.Line) {
-                Gdx.gl.glLineWidth(8f)
+            var lineH = GameMap.size * UI_HEIGHT / minDist
+            if (lineH > UI_HEIGHT) lineH = UI_HEIGHT
+            val lineO = UI_HEIGHT / 2 - lineH / 2
+            renderer.use(ShapeRenderer.ShapeType.Filled) {
+//                Gdx.gl.glLineWidth(lineW)
                 it.color = clr
-                it.line(r * 4f + WIDTH / 2 + 6, lineO, r * 4f + WIDTH / 2 + 6, lineH + lineO)
+                it.rect(r * lineW / smoothing, lineO, lineW / smoothing, lineH)
             }
-            ra += DR / 2
+            ra += DR / smoothing
             if (ra < 0) ra += 2 * PI.toFloat()
             if (ra > 2 * PI.toFloat()) ra -= 2 * PI.toFloat()
         }

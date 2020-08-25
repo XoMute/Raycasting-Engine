@@ -1,6 +1,5 @@
 package com.xomute
 
-import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import ktx.graphics.use
@@ -14,47 +13,50 @@ enum class Direction {
 
 class Player {
 
-    private val rays = Raycaster(60)
+    val rays = Raycaster(60)
 
-    private val speed = 3
-    private val width = 10
-    private val height = 10
+    private val speed = 2f
+//    private val width = 10
+//    private val height = 10
 
     private var angle: Double = 0.0
+    private val diagonalLimit = 0.7f
 
-    private var x: Int = WIDTH / 4
-    private var y: Int = HEIGHT / 4
+    private var x: Float = 1 * GameMap.size + GameMap.size / 2
+    private var y: Float = 1 * GameMap.size + GameMap.size / 2
     private var dx: Float = cos(angle).toFloat() * speed
     private var dy: Float = sin(angle).toFloat() * speed
 
-    private val centerX: Float
-        get() = x.toFloat() + width / 2
-
-    private val centerY: Float
-        get() = y.toFloat() + height / 2
-
     fun draw(renderer: ShapeRenderer) {
-        rays.draw2D(renderer, centerX, centerY, angle.toFloat())
-        renderer.use(ShapeRenderer.ShapeType.Line) {
-            renderer.color = Color.YELLOW
-            Gdx.gl.glLineWidth(1f)
-            renderer.rect(x.toFloat(), y.toFloat(), width.toFloat(), height.toFloat())
-            renderer.line(centerX, centerY, centerX + dx * speed, centerY + dy * speed)
-        }
+        rays.draw2D(renderer, x, y, angle.toFloat())
     }
 
-    fun move(dir: Direction, map: GameMap, speed: Int = this.speed) {
-        if (speed == 0) return
-
-        // todo: implement collision detection
+    fun move(dir: Direction, map: GameMap, diagonal: Boolean = false) {
+        // todo: implement proper collision detection (don't stop if walking into the
         when (dir) {
             Direction.FORWARD -> {
-                x += dx.toInt()
-                y += dy.toInt()
+                calculate(diagonal = diagonal)
             }
             Direction.BACKWARD -> {
-                x -= dx.toInt()
-                y -= dy.toInt()
+                calculate(angle - PI, diagonal)
+            }
+            Direction.LEFT -> {
+                calculate(angle - PI2, diagonal)
+            }
+            Direction.RIGHT -> {
+                calculate(angle + PI2, diagonal)
+            }
+        }
+        when {
+            map.check(x + dx, y + dy) -> {
+                x += dx
+                y += dy
+            }
+            map.check(x + dx, y) -> {
+                x += dx
+            }
+            map.check(x, y + dy) -> {
+                y += dy
             }
         }
     }
@@ -69,6 +71,20 @@ class Player {
             }
             else -> Unit
         }
-        dx = cos(angle).toFloat() * speed; dy = sin(angle).toFloat() * speed
+        calculate()
+    }
+
+    private fun calculate(angle: Double = this.angle, diagonal: Boolean = false) {
+        val speed: Float = if (diagonal) diagonalLimit * this.speed else this.speed
+        dx = cos(angle).toFloat() * speed
+        dy = sin(angle).toFloat() * speed
+    }
+
+    fun drawOnMap(renderer: ShapeRenderer) {
+        renderer.use(ShapeRenderer.ShapeType.Line) {
+            renderer.color = Color.YELLOW
+            renderer.rect(x, y, 5f, 5f)
+            renderer.line(x, y, x + dx * speed, y + dy * speed)
+        }
     }
 }
